@@ -1,0 +1,7 @@
+{
+    http_port 8000
+}
+:8000 {
+    frankenphp
+    log
+}

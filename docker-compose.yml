@@ -1,0 +1,80 @@
+#Usual version
+version: "3.9"
+#Services and container used
+services:
+ #MongoDB
+ mongo:
+  #Pull the image from docker hub
+  image: mongo
+  #Restart if the container fails
+  restart: always
+  #Environment variables for user and password
+  environment:
+   MONGO_INITDB_ROOT_USERNAME: admin
+   MONGO_INITDB_ROOT_PASSWORD: admin123
+  #Port used
+  ports:
+   - "27017:27017"
+  #Volumes, where data will be stored
+  volumes:
+   - mongo-data:/data/db
+  #Network
+  networks:
+   - dps-network
+  #Backend container
+ backend:
+  #File location
+  build: ./backend
+  #Ports used, 8000 for api, 8080 for
+  #reverb (websocket)
+  ports:
+   - "8080:8080"
+   - "8000:8000"
+  #Mongodb must be running first
+  depends_on:
+   - mongo
+  #Environment variables
+  environment:
+   DB_CONNECTION: mongodb
+   DB_HOST: mongo
+   DB_PORT: 27017
+   DB_DATABASE: TempChat
+   DB_USERNAME: admin
+   DB_PASSWORD: admin123
+   #Host and port have to be 0.0.0.0 so
+   #it will be accessible from outside
+   APP_URL: http://0.0.0.0:8000
+   REVERB_SERVER_HOST: 0.0.0.0
+   REVERB_SERVER_PORT: 8080
+   REVERB_SCHEME: http
+  #Same network
+  networks:
+   - dps-network
+
+ #Frontend container
+ frontend:
+  #File location
+  build: ./frontend
+  #Ports used, should use 80 for deployment
+  #since it is the usual port for web
+  ports:
+   - "80:3000"
+  #Backend must be running first
+  depends_on:
+   - backend
+  #Back end will be the host
+  environment:
+   NEXT_PUBLIC_REVERB_HOST: backend
+  #Same network
+  networks:
+   - dps-network
+
+#Define network to make communication
+#between containers
+networks:
+ #Network name
+ dps-network:
+#Volumes for data
+volumes:
+ #Volume name
+ mongo-data:
